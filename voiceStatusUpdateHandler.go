@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,8 +18,8 @@ const (
 )
 
 type meetingEvent struct {
-	at time.Time
-	kind meetingEventKind
+	at      time.Time
+	kind    meetingEventKind
 	subject string
 }
 
@@ -31,6 +32,10 @@ type meeting struct {
 	curMembers []string
 
 	events []*meetingEvent
+
+	// Was this channel created using a channel generator channel?
+	// If so, be sure to clean it up once meeting ends.
+	isTempChannel bool
 }
 
 var guildMeetings = map[string]map[string]*meeting{}
@@ -40,6 +45,106 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 	fmt.Println("Receive VoiceState", e.GuildID, e.ChannelID, e.UserID)
 
 	eventTime := time.Now()
+
+	// Check if user joined a channel generator channel.
+
+	if e.ChannelID != "" {
+		// This potentially is a join. Let's check if the channel is indeed a channel generator channel.
+		channel, err := s.Channel(e.ChannelID)
+
+		if err != nil {
+			fmt.Println(err)
+
+			return
+		}
+
+		// => Check if name meets qualifications.
+
+		cname := strings.ToLower(channel.Name)
+
+		if strings.Contains(cname, "join") || strings.Contains(cname, "click") && strings.Contains(cname, "channel") || strings.Contains(cname, "room") || strings.Contains(cname, "meeting") {
+			// This is a join to create channel.
+			// Let's set up the new channel and create the meeting.
+
+			fmt.Println("Channel generator detected. Preparing to bounce user to new temp channel.")
+
+			guildsMux.Lock()
+			defer guildsMux.Unlock()
+
+			joinChannel, err := s.Channel(e.ChannelID)
+
+			if err != nil {
+				fmt.Println(err)
+
+				return
+			}
+
+			member, err := s.GuildMember(e.GuildID, e.UserID)
+
+			if err != nil {
+				fmt.Println(err)
+
+				return
+			}
+
+			var displayName string
+
+			if member.Nick != "" {
+				displayName = member.Nick
+			} else {
+				displayName = member.User.Username
+			}
+
+			createdChannel, err := s.GuildChannelCreateComplex(e.GuildID, discordgo.GuildChannelCreateData{
+				Name:     "[MM] " + displayName,
+				Type:     discordgo.ChannelTypeGuildVoice,
+				Position: joinChannel.Position + 1,
+				PermissionOverwrites: []*discordgo.PermissionOverwrite{
+					&discordgo.PermissionOverwrite{
+						ID:    e.UserID,
+						Type:  "1",
+						Deny:  0,
+						Allow: discordgo.PermissionManageChannels,
+					},
+				},
+				ParentID: joinChannel.ParentID,
+			})
+
+			if err != nil {
+				fmt.Println(err)
+
+				return
+			}
+
+			if err := s.GuildMemberMove(e.GuildID, e.UserID, &createdChannel.ID); err != nil {
+				fmt.Println(err)
+
+				return
+			}
+
+			// Initialize the meeting (without the user in it, because the user will be added due to the join event being provided for the generated channel as well)
+
+			gm, ok := guildMeetings[e.GuildID]
+
+			if !ok {
+				guildMeetings[e.GuildID] = map[string]*meeting{}
+				gm = guildMeetings[e.GuildID]
+			}
+
+			gm[createdChannel.ID] = &meeting{
+				channelID:     createdChannel.ID,
+				began:         eventTime,
+				ended:         nil,
+				curMembers:    []string{},
+				events:        []*meetingEvent{},
+				isTempChannel: true,
+			}
+
+			return
+		}
+	}
+
+	// Otherwise continue. Check if user is joining / leaving.
 
 	if e.ChannelID == "" {
 		// Leave event
@@ -94,8 +199,8 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 		// Add leave event to meeting
 
 		exitedMeeting.events = append(exitedMeeting.events, &meetingEvent{
-			at:   eventTime,
-			kind: meetingLeave,
+			at:      eventTime,
+			kind:    meetingLeave,
 			subject: e.UserID,
 		})
 
@@ -126,6 +231,10 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 			memberDurations := meetingMemberDurations(exitedMeeting)
 
 			fmt.Println("Finalized meeting", e.GuildID, exitedMeeting.channelID, exitedMeeting.began, *exitedMeeting.ended, memberDurations)
+
+			// If it is a temp channel (eg. made using generator), delete it.
+
+			s.ChannelDelete(exitedMeeting.channelID)
 
 			// If it was just one member, let's ignore it. Barely a real meeting.
 
@@ -160,13 +269,14 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 			began:      eventTime,
 			ended:      nil,
 			curMembers: []string{e.UserID},
-			events:     []*meetingEvent{
+			events: []*meetingEvent{
 				&meetingEvent{
 					at:      eventTime,
 					kind:    meetingJoin,
 					subject: e.UserID,
 				},
 			},
+			isTempChannel: false,
 		}
 
 		guild, ok := guildMeetings[e.GuildID]

@@ -29,6 +29,9 @@ func main() {
 	err = c.UpdateStatusComplex(discordgo.UpdateStatusData{
 		AFK:    false,
 		Status: "ml!help",
+		Game: &discordgo.Game{
+			Name: "ml!help",
+		},
 	})
 
 	if err != nil {

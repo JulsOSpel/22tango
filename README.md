@@ -13,6 +13,8 @@ Meetings with only one member or which last less than 2 minutes will not be logg
 
 The bot will output to the "meeting-logs" text channel if one is located within the server where a meeting took place. Other channel names may also be used, eg. "voice-logs" or "meetings".
 
+Send `ml!help` to see an informational panel.
+
 ## Run
 
 Set environment variable DISCORD_BOT_TOKEN to your bot token.

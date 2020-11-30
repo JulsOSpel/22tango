@@ -17,6 +17,7 @@ func main() {
 		panic(err)
 	}
 
+	c.AddHandler(messageCreate)
 	c.AddHandler(voiceStateUpdate)
 
 	fmt.Println("Opening session...")
@@ -24,6 +25,17 @@ func main() {
 	if err := c.Open(); err != nil {
 		panic(err)
 	}
+
+	err = c.UpdateStatusComplex(discordgo.UpdateStatusData{
+		AFK:    false,
+		Status: "ml!help",
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("OK.")
 
 	sc := make(chan os.Signal, 1)
 

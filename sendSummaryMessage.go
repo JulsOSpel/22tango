@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const EmbedColor = 7123569
+const EmbedColor = 823784
 const TimeLayout = "2 Jan 2006 3:04 PM MST"
 
 type memberDuration struct {

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const MinimumMeetingDurationForPosting = time.Minute * 2
+
 type meetingEventKind int
 
 const (
@@ -50,7 +52,7 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 		if !ok {
 			// Untracked meeting (guild has not been initialized)
 
-			fmt.Println("Untracked guild leave. Ignoring.")
+			fmt.Println("Leave for untracked guild. Ignoring.")
 
 			return
 		}
@@ -80,7 +82,7 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 		if exitedMeeting == nil {
 			// Untracked meeting (did not locate the meeting user left)
 
-			fmt.Println("Untracked meeting leave. Ignoring.")
+			fmt.Println("Leave for untracked meeting. Ignoring.")
 
 			return
 		}
@@ -123,17 +125,29 @@ func voiceStateUpdate(s *discordgo.Session, e *discordgo.VoiceStateUpdate) {
 
 			memberDurations := meetingMemberDurations(exitedMeeting)
 
-			fmt.Println("memberDurations", memberDurations)
+			fmt.Println("Finalized meeting", e.GuildID, exitedMeeting.channelID, exitedMeeting.began, *exitedMeeting.ended, memberDurations)
 
 			// If it was just one member, let's ignore it. Barely a real meeting.
 
 			if len(memberDurations) < 2 {
+				fmt.Println("Meeting did not have enough members to post")
+				return
+			}
+
+			// If the meeting didn't last long, ignore it.
+
+			if exitedMeeting.ended.Sub(exitedMeeting.began) < MinimumMeetingDurationForPosting {
+				fmt.Println("Meeting not long enough to post")
 				return
 			}
 
 			// Now let's post a message with the meeting summary.
 
-			// TODO :)
+			// Locate meeting logs channel in guild
+
+			if err := sendSummaryMessage(s, e.GuildID, exitedMeeting, memberDurations); err != nil {
+				fmt.Println("Error. Failed to send summary message:", err)
+			}
 		}
 	} else {
 		// Check if this is a user join.

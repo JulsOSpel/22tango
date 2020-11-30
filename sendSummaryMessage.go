@@ -81,17 +81,17 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, member
 
 	summaryFields := []*discordgo.MessageEmbedField{
 		&discordgo.MessageEmbedField{
-			Name: "Duration",
+			Name:  "Duration",
 			Value: m.ended.Sub(m.began).Round(time.Second).String(),
 		},
 		&discordgo.MessageEmbedField{
-			Name: "Began",
-			Value: m.began.Format(TimeLayout),
+			Name:   "Began",
+			Value:  m.began.Format(TimeLayout),
 			Inline: true,
 		},
 		&discordgo.MessageEmbedField{
-			Name: "Ended",
-			Value: m.began.Format(TimeLayout),
+			Name:   "Ended",
+			Value:  m.began.Format(TimeLayout),
 			Inline: true,
 		},
 	}
@@ -116,7 +116,7 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, member
 	for i, d := range durations {
 		durationsText += "<@" + d.memberID + "> " + d.duration.Round(time.Second).String()
 
-		if i < len(durations) - 1 {
+		if i < len(durations)-1 {
 			durationsText += "\n"
 		}
 	}
@@ -128,16 +128,16 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, member
 	})
 
 	// Create final summary embed
-	
+
 	summary := &discordgo.MessageEmbed{
-		URL:         "",
-		Type:        "",
-		Title:       "Meeting Summary from " + meetingVoiceChannel.Name,
-		Color:       7123569,
-		Footer:      &discordgo.MessageEmbedFooter{
-			Text:         "MeetingLogs Bot",
+		URL:   "",
+		Type:  "",
+		Title: "Meeting Summary from " + meetingVoiceChannel.Name,
+		Color: 7123569,
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "MeetingLogs Bot",
 		},
-		Fields:      summaryFields,
+		Fields: summaryFields,
 	}
 
 	// Send summary message

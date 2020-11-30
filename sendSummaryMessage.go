@@ -91,7 +91,7 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, member
 		},
 		&discordgo.MessageEmbedField{
 			Name:   "Ended",
-			Value:  m.began.Format(TimeLayout),
+			Value:  m.ended.Format(TimeLayout),
 			Inline: true,
 		},
 	}

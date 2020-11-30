@@ -109,11 +109,13 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, member
 
 	sort.Sort(durations)
 
-	// Add sorted durations to new field
+	// Add sorted durations to new field (descending order)
 
 	durationsText := ""
 
-	for i, d := range durations {
+	for i := len(durations) - 1; i >= 0; i-- {
+		d := durations[i]
+
 		durationsText += "<@" + d.memberID + "> " + d.duration.Round(time.Second).String()
 
 		if i < len(durations)-1 {

@@ -8,6 +8,8 @@ import (
 
 const EmbedColor = 823784
 const TimeLayout = "2 Jan 2006 3:04 PM MST"
+const MinMembersToSendSummary = 2
+const MinDurationToSendSummary = 2 * time.Minute
 
 type memberDuration struct {
 	memberID string
@@ -31,7 +33,21 @@ func (m memberDurationList) Swap(i, j int) {
 	m[i] = hold
 }
 
-func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting, memberDurations map[string]time.Duration) error {
+func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting) error {
+	memberDurations := meetingMemberDurations(m)
+
+	// Don't send summary if qualifications not met.
+
+	if len(memberDurations) < MinMembersToSendSummary {
+		return nil
+	}
+
+	if m.ended.Sub(m.began) < MinDurationToSendSummary {
+		return nil
+	}
+
+	// Send.
+
 	guildChannels, err := s.GuildChannels(guildId)
 
 	if err != nil {

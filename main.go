@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,22 +12,29 @@ import (
 var LogChannelNames = []string{"meeting-logs", "voice-logs", "voice-channel-logs", "conference-logs", "meetinglogs", "conferencelogs", "voicelogs", "conferences", "meeting-summaries", "meetingsummaries", "voicesummaries", "voice-summaries", "meetings", "meeting", "conference"}
 
 func main() {
-	c, err := discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
+	s, err := discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
 
 	if err != nil {
 		panic(err)
 	}
 
-	c.AddHandler(messageCreate)
-	c.AddHandler(voiceStateUpdate)
+	eventChan := make(chan *queue.VoiceStateEvent)
+
+	q := queue.NewVoiceStateEventQueue(eventChan)
+
+	s.AddHandler(q.Handler)
+
+	s.AddHandler(messageCreate)
+
+	go beginAcceptingVoiceEvents(s, eventChan)
 
 	fmt.Println("Opening session...")
 
-	if err := c.Open(); err != nil {
+	if err := s.Open(); err != nil {
 		panic(err)
 	}
 
-	err = c.UpdateStatusComplex(discordgo.UpdateStatusData{
+	err = s.UpdateStatusComplex(discordgo.UpdateStatusData{
 		AFK:    false,
 		Status: "ml!help",
 		Game: &discordgo.Game{

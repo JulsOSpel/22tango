@@ -45,6 +45,8 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 		eventTime := time.Now()
 
 		if e.Type == queue.VoiceChannelJoin {
+			fmt.Println("Join event received", e.ChannelID)
+
 			// Join event
 
 			joinedChannel, err := s.Channel(e.ChannelID)
@@ -54,7 +56,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 				continue
 			}
 
-			cname := joinedChannel.Name
+			cname := strings.ToLower(joinedChannel.Name)
 
 			curGuildMeetings, ok := guildMeetings[e.GuildID]
 
@@ -70,6 +72,8 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			if strings.Contains(cname, "join") || strings.Contains(cname, "click") && strings.Contains(cname, "channel") || strings.Contains(cname, "room") || strings.Contains(cname, "meeting") {
 				// This is a generator channel.
 
+				fmt.Println("Gen channel")
+
 				// Get user name
 
 				generatingUser, err := s.User(e.UserID)
@@ -83,7 +87,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 				// Generate channel
 
 				generatedChannel, err := s.GuildChannelCreateComplex(e.GuildID, discordgo.GuildChannelCreateData{
-					Name:     "[Gen] " + generatingUser.Username,
+					Name:     "[Temp] " + generatingUser.Username,
 					Type:     discordgo.ChannelTypeGuildVoice,
 					Position: joinedChannel.Position + 1,
 					PermissionOverwrites: []*discordgo.PermissionOverwrite{
@@ -105,7 +109,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 
 				// Init meeting and move user.
 
-				curGuildMeetings[e.ChannelID] = &meeting{
+				curGuildMeetings[generatedChannel.ID] = &meeting{
 					channelID:     generatedChannel.ID,
 					began:         eventTime,
 					ended:         nil,
@@ -114,10 +118,14 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 					isTempChannel: true,
 				}
 
-				s.GuildMemberMove(e.GuildID, e.UserID, &generatedChannel.ID)
+				if err := s.GuildMemberMove(e.GuildID, e.UserID, &generatedChannel.ID); err != nil {
+					fmt.Println(err)
+				}
 
 				continue
 			}
+
+			fmt.Println("Not a gen channel")
 
 			// Otherwise, this is a normal join event.
 
@@ -149,10 +157,11 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			joinedMeet.curMembers = append(joinedMeet.curMembers, e.UserID)
 			joinedMeet.events = append(joinedMeet.events, &meetingEvent{
 				at:      eventTime,
-				kind:    meetingLeave,
+				kind:    meetingJoin,
 				subject: e.UserID,
 			})
 		} else if e.Type == queue.VoiceChannelLeave {
+			fmt.Println("Leave event received", e.ChannelID)
 			// Leave event
 
 			// Locate meeting
@@ -160,14 +169,14 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			guild, ok := guildMeetings[e.GuildID]
 
 			if !ok {
-				fmt.Println("Untracked leave in guild " + e.GuildID + " (this shouldn't happen generally)")
+				fmt.Println("Untracked leave in guild " + e.GuildID)
 				continue
 			}
 
 			curMeeting, ok := guild[e.ChannelID]
 
 			if !ok {
-				fmt.Println("Untracked leave in channel " + e.GuildID + "-" + e.ChannelID + " (this shouldn't happen generally)")
+				fmt.Println("Untracked leave in channel " + e.GuildID + "-" + e.ChannelID)
 				continue
 			}
 
@@ -183,7 +192,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			}
 
 			if userIdxInMeeting != -1 {
-				curMeeting.curMembers = append(curMeeting.curMembers[:userIdxInMeeting], curMeeting.curMembers[userIdxInMeeting:]...)
+				curMeeting.curMembers = append(curMeeting.curMembers[:userIdxInMeeting], curMeeting.curMembers[userIdxInMeeting + 1:]...)
 			}
 
 			curMeeting.events = append(curMeeting.events, &meetingEvent{
@@ -193,6 +202,8 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			})
 
 			// If meeting is empty, delete it from memory and trigger potential message.
+
+			fmt.Println("Still left:", len(curMeeting.curMembers))
 
 			if len(curMeeting.curMembers) == 0 {
 				// Meeting is empty.
@@ -211,20 +222,31 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 
 				fmt.Println("Deleted from memory. Guilds:", len(guildMeetings))
 
-				// => Consider sending summary message.
-
-				err := sendSummaryMessage(s, e.GuildID, curMeeting)
-
-				if err != nil {
-					fmt.Println(err)
-				}
-
 				// => If meeting channel is temp channel, delete it.
 
+				var meetingChan *discordgo.Channel
+				var err error
+
 				if curMeeting.isTempChannel {
-					if _, err := s.ChannelDelete(e.ChannelID); err != nil {
+					meetingChan, err = s.ChannelDelete(e.ChannelID)
+
+					if err != nil {
 						fmt.Println(err)
+						continue
 					}
+				} else {
+					meetingChan, err = s.Channel(e.ChannelID)
+
+					if err != nil {
+						fmt.Println(err)
+						continue
+					}
+				}
+
+				// => Consider sending summary message.
+
+				if err := sendSummaryMessage(s, e.GuildID, meetingChan, curMeeting); err != nil {
+					fmt.Println(err)
 				}
 			}
 		}

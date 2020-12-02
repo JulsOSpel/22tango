@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"sort"
 	"time"
@@ -33,16 +34,18 @@ func (m memberDurationList) Swap(i, j int) {
 	m[i] = hold
 }
 
-func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting) error {
+func sendSummaryMessage(s *discordgo.Session, guildId string, meetingVoiceChannel *discordgo.Channel, m *meeting) error {
 	memberDurations := meetingMemberDurations(m)
 
 	// Don't send summary if qualifications not met.
 
 	if len(memberDurations) < MinMembersToSendSummary {
+		fmt.Println("Not sending summary. Min members.", len(memberDurations))
 		return nil
 	}
 
 	if m.ended.Sub(m.began) < MinDurationToSendSummary {
+		fmt.Println("Not sending summary. Min duration.")
 		return nil
 	}
 
@@ -55,17 +58,10 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting) error 
 	}
 
 	var sendSummaryChannel *discordgo.Channel
-	var meetingVoiceChannel *discordgo.Channel
 
 	for _, curChannel := range guildChannels {
 		if curChannel.Type != discordgo.ChannelTypeGuildText {
-			// Non-text channel. Check if it is the meeting channel.
-
-			if curChannel.Type == discordgo.ChannelTypeGuildVoice && curChannel.ID == m.channelID {
-				meetingVoiceChannel = curChannel
-			}
-
-			// Otherwise ignore non-text channel.
+			// Ignore non-text channel.
 
 			continue
 		}
@@ -89,6 +85,8 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting) error 
 
 	if sendSummaryChannel == nil {
 		// Did not locate a meeting summary channel
+
+		fmt.Println("Did not locate summary channel.")
 
 		return nil
 	}
@@ -148,9 +146,7 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, m *meeting) error 
 	// Create final summary embed
 
 	summary := &discordgo.MessageEmbed{
-		URL:   "",
-		Type:  "",
-		Title: "Meeting Summary from " + meetingVoiceChannel.Name,
+		Title: meetingVoiceChannel.Name + " Meeting Summary",
 		Color: 7123569,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: "MeetingLogs Bot",

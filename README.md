@@ -1,9 +1,9 @@
-# discord-meetinglogs
-> MeetingLogs bot, for logging meetings in Discord voice channels
+# discord-meetingmanager
+> MeetingManager bot, for logging meetings in Discord voice channels
 
 ## Add to your server
 
-[Click here](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot) to add the MeetingLogs bot to your server. (Or use the [reduced permissions option](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=120933904&scope=bot).)
+[Click here](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot) to add the MeetingManager bot to your server.
 
 ## Functionality
 

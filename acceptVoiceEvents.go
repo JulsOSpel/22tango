@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
-	"strings"
 	"time"
 )
 
@@ -56,8 +55,6 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 				continue
 			}
 
-			cname := strings.ToLower(joinedChannel.Name)
-
 			curGuildMeetings, ok := guildMeetings[e.GuildID]
 
 			if !ok {
@@ -67,9 +64,20 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 				curGuildMeetings = guildMeetings[e.GuildID]
 			}
 
-			// If this is a generator channel, generate...
+			// Check if it is a generator channel...
 
-			if strings.Contains(cname, "join") || strings.Contains(cname, "click") && strings.Contains(cname, "channel") || strings.Contains(cname, "room") || strings.Contains(cname, "meeting") {
+			chanDat, err := app.Get(e.GuildID, "chandat-v1-"+e.ChannelID)
+			var isGenChannel bool
+
+			if err != nil {
+				fmt.Println(err)
+
+				isGenChannel = false
+			} else {
+				isGenChannel = chanDat[0] == genVoiceChannel
+			}
+
+			if isGenChannel {
 				// This is a generator channel.
 
 				fmt.Println("Gen channel")
@@ -87,7 +95,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 				// Generate channel
 
 				generatedChannel, err := s.GuildChannelCreateComplex(e.GuildID, discordgo.GuildChannelCreateData{
-					Name:     "[Temp] " + generatingUser.Username,
+					Name:     "[Voice] " + generatingUser.Username,
 					Type:     discordgo.ChannelTypeGuildVoice,
 					Position: joinedChannel.Position + 1,
 					PermissionOverwrites: []*discordgo.PermissionOverwrite{
@@ -95,7 +103,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 							ID:    e.UserID,
 							Type:  "1",
 							Deny:  0,
-							Allow: discordgo.PermissionManageChannels,
+							Allow: discordgo.PermissionManageChannels | discordgo.PermissionAllVoice,
 						},
 					},
 					ParentID: joinedChannel.ParentID,
@@ -192,7 +200,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 			}
 
 			if userIdxInMeeting != -1 {
-				curMeeting.curMembers = append(curMeeting.curMembers[:userIdxInMeeting], curMeeting.curMembers[userIdxInMeeting + 1:]...)
+				curMeeting.curMembers = append(curMeeting.curMembers[:userIdxInMeeting], curMeeting.curMembers[userIdxInMeeting+1:]...)
 			}
 
 			curMeeting.events = append(curMeeting.events, &meetingEvent{
@@ -232,7 +240,6 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 
 					if err != nil {
 						fmt.Println(err)
-						continue
 					}
 				} else {
 					meetingChan, err = s.Channel(e.ChannelID)

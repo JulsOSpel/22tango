@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
+	"github.com/ethanent/discordkvs"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,8 +12,16 @@ import (
 
 var LogChannelNames = []string{"meeting-logs", "voice-logs", "voice-channel-logs", "conference-logs", "meetinglogs", "conferencelogs", "voicelogs", "conferences", "meeting-summaries", "meetingsummaries", "voicesummaries", "voice-summaries", "meetings", "meeting", "conference"}
 
+var app *discordkvs.Application
+
 func main() {
 	s, err := discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	app, err = discordkvs.NewApplication(s, "MeetingManager-4341238733892")
 
 	if err != nil {
 		panic(err)
@@ -25,6 +34,8 @@ func main() {
 	s.AddHandler(q.Handler)
 
 	s.AddHandler(messageCreate)
+	s.AddHandler(channelCreate)
+	s.AddHandler(channelDelete)
 
 	go beginAcceptingVoiceEvents(s, eventChan)
 

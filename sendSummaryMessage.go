@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethanent/discordkvs"
 	"sort"
 	"time"
 )
@@ -51,45 +52,19 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, meetingVoiceChanne
 
 	// Send.
 
-	guildChannels, err := s.GuildChannels(guildId)
+	d, err := app.Get(guildId, "meetingLogChannelID")
 
 	if err != nil {
-		return err
-	}
-
-	var sendSummaryChannel *discordgo.Channel
-
-	for _, curChannel := range guildChannels {
-		if curChannel.Type != discordgo.ChannelTypeGuildText {
-			// Ignore non-text channel.
-
-			continue
+		if err != discordkvs.ErrNoExist {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Not sending summary. No meetingLogChannelID set.")
 		}
-
-		// Check if channel name in valid log channel names
-
-		isLogChannelName := false
-
-		for _, logChannelName := range LogChannelNames {
-			if curChannel.Name == logChannelName {
-				isLogChannelName = true
-				break
-			}
-		}
-
-		if isLogChannelName {
-			sendSummaryChannel = curChannel
-			break
-		}
-	}
-
-	if sendSummaryChannel == nil {
-		// Did not locate a meeting summary channel
-
-		fmt.Println("Did not locate summary channel.")
 
 		return nil
 	}
+
+	logChannelID := string(d)
 
 	// Create summary message
 
@@ -149,14 +124,14 @@ func sendSummaryMessage(s *discordgo.Session, guildId string, meetingVoiceChanne
 		Title: meetingVoiceChannel.Name + " Meeting Summary",
 		Color: 7123569,
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: "MeetingLogs Bot",
+			Text: "MeetingManager Bot",
 		},
 		Fields: summaryFields,
 	}
 
 	// Send summary message
 
-	if _, err := s.ChannelMessageSendEmbed(sendSummaryChannel.ID, summary); err != nil {
+	if _, err := s.ChannelMessageSendEmbed(logChannelID, summary); err != nil {
 		return err
 	}
 

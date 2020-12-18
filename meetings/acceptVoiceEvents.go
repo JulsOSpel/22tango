@@ -1,9 +1,10 @@
-package main
+package meetings
 
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
+	"github.com/ethanent/discordkvs"
 	"time"
 )
 
@@ -39,7 +40,7 @@ var guildMeetings = map[string]map[string]*meeting{}
 
 // No mux needed because this program is single-threaded.
 
-func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEvent) {
+func BeginAcceptingVoiceEvents(s *discordgo.Session, app *discordkvs.Application, c chan *queue.VoiceStateEvent) {
 	for e := range c {
 		eventTime := time.Now()
 
@@ -252,7 +253,7 @@ func beginAcceptingVoiceEvents(s *discordgo.Session, c chan *queue.VoiceStateEve
 
 				// => Consider sending summary message.
 
-				if err := sendSummaryMessage(s, e.GuildID, meetingChan, curMeeting); err != nil {
+				if err := sendSummaryMessage(s, app, e.GuildID, meetingChan, curMeeting); err != nil {
 					fmt.Println(err)
 				}
 			}

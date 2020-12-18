@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethanent/22tango/meetings"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
 	"github.com/ethanent/discordkvs"
 	"os"
@@ -27,17 +28,31 @@ func main() {
 		panic(err)
 	}
 
-	eventChan := make(chan *queue.VoiceStateEvent)
+	// => Set up meetings
 
-	q := queue.NewVoiceStateEventQueue(eventChan)
+	voiceEventChan := make(chan *queue.VoiceStateEvent)
+
+	q := queue.NewVoiceStateEventQueue(voiceEventChan)
 
 	s.AddHandler(q.Handler)
 
-	s.AddHandler(messageCreate)
-	s.AddHandler(channelCreate)
-	s.AddHandler(channelDelete)
+	// Add handlers wrapping to provide app to meetings package.
 
-	go beginAcceptingVoiceEvents(s, eventChan)
+	s.AddHandler(func (s *discordgo.Session, e *discordgo.ChannelCreate) {
+		meetings.ChannelCreate(s, e, app)
+	})
+
+	s.AddHandler(func (s *discordgo.Session, e *discordgo.ChannelDelete) {
+		meetings.ChannelDelete(s, e, app)
+	})
+
+	go meetings.BeginAcceptingVoiceEvents(s, app, voiceEventChan)
+
+	// => Set up command handler
+
+	s.AddHandler(messageCreate)
+
+	// => Open session
 
 	fmt.Println("Opening session...")
 

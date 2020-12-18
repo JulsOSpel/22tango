@@ -1,9 +1,9 @@
-# discord-meetingmanager
-> MeetingManager bot, for logging meetings in Discord voice channels
+# 22tango
+> Discord management bot which handles meeting logging, temp channels, and role assignment
 
 ## Add to your server
 
-[Click here](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot) to add the MeetingManager bot to your server.
+[Click here](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot) to add the 22tango bot to your server.
 
 ## Functionality
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethanent/22tango/meetings"
 )
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -10,7 +11,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Title:       "MeetingManager Help",
 			Description: "MeetingManager bot created by ethanent.\nGitHub repo: [ethanent/discord-meetinglogs](https://github.com/ethanent/discord-meetinglogs)",
 			Timestamp:   "",
-			Color:       EmbedColor,
+			Color:       meetings.EmbedColor,
 			Footer: &discordgo.MessageEmbedFooter{
 				Text: "MeetingLogs Bot",
 			},

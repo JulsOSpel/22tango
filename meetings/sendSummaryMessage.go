@@ -1,4 +1,4 @@
-package main
+package meetings
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func (m memberDurationList) Swap(i, j int) {
 	m[i] = hold
 }
 
-func sendSummaryMessage(s *discordgo.Session, guildId string, meetingVoiceChannel *discordgo.Channel, m *meeting) error {
+func sendSummaryMessage(s *discordgo.Session, app *discordkvs.Application, guildId string, meetingVoiceChannel *discordgo.Channel, m *meeting) error {
 	memberDurations := meetingMemberDurations(m)
 
 	// Don't send summary if qualifications not met.

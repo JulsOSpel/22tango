@@ -1,8 +1,9 @@
-package main
+package meetings
 
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethanent/discordkvs"
 	"regexp"
 )
 
@@ -14,7 +15,7 @@ const (
 	// genVoiceAndTextChannel = 1
 )
 
-func channelCreate(s *discordgo.Session, e *discordgo.ChannelCreate) {
+func ChannelCreate(s *discordgo.Session, e *discordgo.ChannelCreate, app *discordkvs.Application) {
 	fmt.Println("Channel create:", e.Name)
 
 	// Check if meets voice channel spec qualifications
@@ -70,7 +71,7 @@ func channelCreate(s *discordgo.Session, e *discordgo.ChannelCreate) {
 	}
 }
 
-func channelDelete(s *discordgo.Session, e *discordgo.ChannelDelete) {
+func ChannelDelete(s *discordgo.Session, e *discordgo.ChannelDelete, app *discordkvs.Application) {
 	// Clean up any chandat data for channel. (if exists)
 
 	err := app.Del(e.GuildID, "chandat-v1-"+e.Channel.ID)

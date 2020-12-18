@@ -1,4 +1,4 @@
-module github.com/ethanent/discord-meetinglogs
+module github.com/ethanent/22tango
 
 go 1.15
 

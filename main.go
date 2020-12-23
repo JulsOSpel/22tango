@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/ethanent/22tango/factcheck"
 	"github.com/ethanent/22tango/meetings"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
 	"github.com/ethanent/discordkvs"
@@ -48,6 +49,16 @@ func main() {
 
 	go meetings.BeginAcceptingVoiceEvents(s, app, voiceEventChan)
 
+	// => Set up factcheck
+
+	if err := factcheck.LoadData(); err != nil {
+		panic(err)
+	}
+
+	s.AddHandler(func (s *discordgo.Session, e *discordgo.MessageCreate) {
+		factcheck.MessageSend(s, e, app)
+	})
+
 	// => Set up command handler
 
 	s.AddHandler(messageCreate)
@@ -62,9 +73,9 @@ func main() {
 
 	err = s.UpdateStatusComplex(discordgo.UpdateStatusData{
 		AFK:    false,
-		Status: "ml!help",
+		Status: "2!help",
 		Game: &discordgo.Game{
-			Name: "ml!help",
+			Name: "2!help",
 		},
 	})
 

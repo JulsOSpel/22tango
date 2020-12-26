@@ -82,8 +82,6 @@ func MessageSend(s *discordgo.Session, e *discordgo.MessageCreate, app *discordk
 			continue
 		}
 
-		fmt.Println(match.DisplayName, match.Accuracy, match.Bias)
-
 		// Strong sources
 
 		// 0 = unclassified, 1 = top tier, 2 = great, 3 = fine, 4 = poor, 5 = very poor, 6 = subpar
@@ -95,9 +93,7 @@ func MessageSend(s *discordgo.Session, e *discordgo.MessageCreate, app *discordk
 			} else {
 				sourceQuality = 2
 			}
-		}
-
-		if match.Bias == "least biased" || match.Bias == "left-center" || match.Bias == "right-center" {
+		} else if match.Bias == "least biased" || match.Bias == "left-center" || match.Bias == "right-center" {
 			if match.Accuracy == "very high" {
 				sourceQuality = 2
 			} else if match.Accuracy == "high" {
@@ -107,21 +103,25 @@ func MessageSend(s *discordgo.Session, e *discordgo.MessageCreate, app *discordk
 
 		// Weak sources
 
-		if match.Bias == "questionable" || match.Bias == "conspiracy/pseudoscience" {
-			sourceQuality = 5
-		}
-
-		if match.Accuracy == "low" || match.Accuracy == "very low" {
+		if match.Accuracy == "low" {
 			sourceQuality = 4
-		}
-
-		if match.Accuracy == "mixed" {
-			if match.Bias == "left" || match.Bias == "right" {
+		} else if match.Accuracy == "very low" {
+			sourceQuality = 5
+		} else if match.Accuracy == "mixed" {
+			if match.Bias == "conspiracy/pseudoscience" {
+				sourceQuality = 5
+			} else if match.Bias == "left" || match.Bias == "right" {
 				sourceQuality = 4
 			} else {
 				sourceQuality = 6
 			}
 		}
+
+		if match.Bias == "questionable" {
+			sourceQuality = 5
+		}
+
+		fmt.Println(match.DisplayName, match.Accuracy, match.Bias, sourceQuality)
 
 		switch sourceQuality {
 		case 1:

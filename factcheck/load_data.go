@@ -1,6 +1,7 @@
 package factcheck
 
 import (
+	_ "embed"
 	"encoding/json"
 	"github.com/bobesa/go-domain-util/domainutil"
 	"net/url"
@@ -16,6 +17,9 @@ type SiteData struct {
 }
 
 var fcdata = map[string]map[string]*SiteData{}
+
+//go:embed mbfc_data.json
+var FCData []byte
 
 func LoadData() error {
 	// Maybe one day, using Go 1.16, we will be able to embed this file in a nicer way.

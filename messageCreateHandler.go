@@ -7,6 +7,7 @@ import (
 	"github.com/ethanent/22tango/meetings"
 	"github.com/ethanent/discordkvs"
 	"strings"
+	"time"
 )
 
 var subcommandHandlersMap = map[string]func(*discordgo.Session, *discordgo.MessageCreate, *discordkvs.Application, []string){
@@ -27,6 +28,35 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		switch arg[0] {
 		case "help":
 			s.ChannelMessageSendEmbed(m.ChannelID, helpEmbed)
+		case "tz":
+			if len(arg) < 2 {
+				tzName := "Default (" + meetings.DefaultTZName + ")"
+
+				if tzB, err := app.Get(m.GuildID, "timezone"); err == nil {
+					tzName = string(tzB)
+				}
+
+				s.ChannelMessageSend(m.ChannelID, "Server preferred timezone is currently set to `" + tzName + "`.\n\nTo set timezone: `2!tz [timezone]`\nExample: `2!tz America/Los_Angeles`")
+				return
+			}
+
+			// Check that timezone exists
+
+			_, err := time.LoadLocation(arg[1])
+
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, "Unknown timezone. Example: `America/Los_Angeles`\nList of timezones: <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>")
+				return
+			}
+
+			if err := app.Set(m.GuildID, "timezone", []byte(arg[1])); err != nil {
+				fmt.Println(err)
+				s.ChannelMessageSend(m.ChannelID, "Failed to save timezone. Check bot permissions.")
+
+				return
+			}
+
+			s.ChannelMessageSend(m.ChannelID, "Server preferred timezone has has been set to `" + arg[1] + "`")
 		default:
 			// Find correct handler for subcommand if exists
 
@@ -60,6 +90,11 @@ var helpEmbed = &discordgo.MessageEmbed{
 		&discordgo.MessageEmbedField{
 			Name:   "Fact Checking",
 			Value:  "See fact checking features using the `2!factcheck` subcommand.",
+			Inline: false,
+		},
+		&discordgo.MessageEmbedField{
+			Name:   "Set Timezone",
+			Value:  "Set timezone with 2!tz command. eg. `2!tz America/Los_Angeles`",
 			Inline: false,
 		},
 		&discordgo.MessageEmbedField{

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+const DefaultTZName = "America/Los_Angeles"
 const EmbedColor = 823784
 const TimeLayout = "2 Jan 2006 3:04 PM MST"
 const MinMembersToSendSummary = 2
@@ -66,6 +67,24 @@ func sendSummaryMessage(s *discordgo.Session, app *discordkvs.Application, guild
 
 	logChannelID := string(d)
 
+	// Formatting time
+
+	// => Get appropriate timezone
+
+	locName := DefaultTZName
+
+	tzR, err := app.Get(guildId, "timezone")
+
+	if err == nil {
+		locName = string(tzR)
+	}
+
+	loc, err := time.LoadLocation(locName)
+
+	if err != nil {
+		return err
+	}
+
 	// Create summary message
 
 	summaryFields := []*discordgo.MessageEmbedField{
@@ -75,12 +94,12 @@ func sendSummaryMessage(s *discordgo.Session, app *discordkvs.Application, guild
 		},
 		&discordgo.MessageEmbedField{
 			Name:   "Began",
-			Value:  m.began.Format(TimeLayout),
+			Value:  m.began.In(loc).Format(TimeLayout),
 			Inline: true,
 		},
 		&discordgo.MessageEmbedField{
 			Name:   "Ended",
-			Value:  m.ended.Format(TimeLayout),
+			Value:  m.ended.In(loc).Format(TimeLayout),
 			Inline: true,
 		},
 	}

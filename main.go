@@ -10,9 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	_ "time/tzdata"
 )
-
-var LogChannelNames = []string{"meeting-logs", "voice-logs", "voice-channel-logs", "conference-logs", "meetinglogs", "conferencelogs", "voicelogs", "conferences", "meeting-summaries", "meetingsummaries", "voicesummaries", "voice-summaries", "meetings", "meeting", "conference"}
 
 var app *discordkvs.Application
 
@@ -39,11 +38,11 @@ func main() {
 
 	// Add handlers wrapping to provide app to meetings package.
 
-	s.AddHandler(func (s *discordgo.Session, e *discordgo.ChannelCreate) {
+	s.AddHandler(func(s *discordgo.Session, e *discordgo.ChannelCreate) {
 		meetings.ChannelCreate(s, e, app)
 	})
 
-	s.AddHandler(func (s *discordgo.Session, e *discordgo.ChannelDelete) {
+	s.AddHandler(func(s *discordgo.Session, e *discordgo.ChannelDelete) {
 		meetings.ChannelDelete(s, e, app)
 	})
 
@@ -55,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	s.AddHandler(func (s *discordgo.Session, e *discordgo.MessageCreate) {
+	s.AddHandler(func(s *discordgo.Session, e *discordgo.MessageCreate) {
 		factcheck.MessageSend(s, e, app)
 	})
 

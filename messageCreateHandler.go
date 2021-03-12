@@ -40,6 +40,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
+			// Prepare to update timezone
+
+			// Check that user is owner
+
+			if g, err := s.Guild(m.GuildID); err != nil {
+				return
+			} else {
+				if g.OwnerID != m.Author.ID {
+					s.ChannelMessageSend(m.ChannelID, "Only the server owner may update the preferred timezone.")
+					return
+				}
+			}
+
 			// Check that timezone exists
 
 			_, err := time.LoadLocation(arg[1])

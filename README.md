@@ -17,7 +17,7 @@ The bot will generate personal voice channels when users join a generator channe
 
 To create a generator channel, create a voice channel called "mm-gen". It will be renamed by the bot to "Join to Create a Channel" if successful.
 
-Send `ml!help` to see an informational panel.
+Send `2!help` to see an informational panel.
 
 ## Run
 

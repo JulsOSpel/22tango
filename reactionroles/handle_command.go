@@ -14,7 +14,7 @@ const HelpMessage = "reactionroles subcommands:\n\tconfig <channel ID> <message 
 var customEmojiRegex = regexp.MustCompile(`^<a?:(.+:([0-9]{18}))>$`)
 
 // Bad "emoji" regex:
-var standardEmojiRegex = regexp.MustCompile(`^[^A-Za-z0-9\.\,\'\;\\\[\]\{\}\|\/\?\>\<]$`)
+var standardEmojiRegex = regexp.MustCompile(`^[^A-Za-z\.\,\\\/]{1,8}$`)
 
 func NormalizeDiscordEmoji(e string) (std string, api string, err error) {
 	if standardEmojiRegex.MatchString(e) {
@@ -71,7 +71,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, app *discor
 
 		// Check emoji
 
-		useEmoji, apiEmoji, err := NormalizeDiscordEmoji(a[3])
+		_, apiEmoji, err := NormalizeDiscordEmoji(a[3])
 
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "The emoji provided is invalid.")
@@ -80,7 +80,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, app *discor
 
 		// Done
 
-		assoscKeyName := a[1] + "-" + a[2] + "-" + useEmoji
+		assoscKeyName := a[1] + "-" + a[2] + "-" + apiEmoji
 
 		fmt.Println(assoscKeyName)
 

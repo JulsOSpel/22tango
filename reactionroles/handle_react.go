@@ -12,13 +12,13 @@ func MessageReactionAdd(s *discordgo.Session, e *discordgo.MessageReactionAdd, a
 		return
 	}
 
-	useEmoji, _, err := NormalizeDiscordEmoji(e.Emoji.MessageFormat())
+	_, apiEmoji, err := NormalizeDiscordEmoji(e.Emoji.MessageFormat())
 
 	if err != nil {
 		return
 	}
 
-	assoscKeyName := e.ChannelID + "-" + e.MessageID + "-" + useEmoji
+	assoscKeyName := e.ChannelID + "-" + e.MessageID + "-" + apiEmoji
 
 	useRoleIDB, err := app.Get(e.GuildID, assoscKeyName)
 
@@ -43,13 +43,13 @@ func MessageReactionRemove(s *discordgo.Session, e *discordgo.MessageReactionRem
 		return
 	}
 
-	useEmoji, _, err := NormalizeDiscordEmoji(e.Emoji.MessageFormat())
+	_, apiEmoji, err := NormalizeDiscordEmoji(e.Emoji.MessageFormat())
 
 	if err != nil {
 		return
 	}
 
-	assoscKeyName := e.ChannelID + "-" + e.MessageID + "-" + useEmoji
+	assoscKeyName := e.ChannelID + "-" + e.MessageID + "-" + apiEmoji
 
 	useRoleIDB, err := app.Get(e.GuildID, assoscKeyName)
 

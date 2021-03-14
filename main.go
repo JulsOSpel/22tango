@@ -5,6 +5,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/ethanent/22tango/factcheck"
 	"github.com/ethanent/22tango/meetings"
+	"github.com/ethanent/22tango/reactionroles"
 	queue "github.com/ethanent/discordgo_voicestateupdatequeue"
 	"github.com/ethanent/discordkvs"
 	"os"
@@ -56,6 +57,16 @@ func main() {
 
 	s.AddHandler(func(s *discordgo.Session, e *discordgo.MessageCreate) {
 		factcheck.MessageSend(s, e, app)
+	})
+
+	// => Set up reactionroles
+
+	s.AddHandler(func(s *discordgo.Session, e *discordgo.MessageReactionAdd) {
+		reactionroles.MessageReactionAdd(s, e, app)
+	})
+
+	s.AddHandler(func(s *discordgo.Session, e *discordgo.MessageReactionRemove) {
+		reactionroles.MessageReactionRemove(s, e, app)
 	})
 
 	// => Set up command handler

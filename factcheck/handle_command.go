@@ -11,7 +11,7 @@ const FactCheckEnabledMessage = "Fact check is **enabled**."
 const DataWriteErrorMessage = "Error writing data. Ensure bot permissions are configured correctly."
 const NonOwnerErrorMessage = "Only the server owner may perform that action."
 
-func ensureOwner(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+func EnsureOwner(s *discordgo.Session, m *discordgo.MessageCreate) bool {
 	g, err := s.Guild(m.GuildID)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, app *discor
 			s.ChannelMessageSend(m.ChannelID, "Invalid value")
 		}
 	case "enable":
-		if !ensureOwner(s, m) {
+		if !EnsureOwner(s, m) {
 			s.ChannelMessageSend(m.ChannelID, NonOwnerErrorMessage)
 			return
 		}
@@ -66,7 +66,7 @@ func HandleCommand(s *discordgo.Session, m *discordgo.MessageCreate, app *discor
 			s.ChannelMessageSend(m.ChannelID, FactCheckEnabledMessage)
 		}
 	case "disable":
-		if !ensureOwner(s, m) {
+		if !EnsureOwner(s, m) {
 			s.ChannelMessageSend(m.ChannelID, NonOwnerErrorMessage)
 			return
 		}

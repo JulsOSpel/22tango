@@ -5,6 +5,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/ethanent/22tango/factcheck"
 	"github.com/ethanent/22tango/meetings"
+	"github.com/ethanent/22tango/reactionroles"
 	"github.com/ethanent/discordkvs"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 var subcommandHandlersMap = map[string]func(*discordgo.Session, *discordgo.MessageCreate, *discordkvs.Application, []string){
 	"factcheck": factcheck.HandleCommand,
+	"rr": reactionroles.HandleCommand,
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {

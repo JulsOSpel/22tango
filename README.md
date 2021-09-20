@@ -1,11 +1,12 @@
-# 22tango
-> Discord management bot which handles meeting logging, temp channels, and role assignment
+# **22tango** :robot:
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-## Add to your server
+**A Discord management bot which handles meeting logging, temp channels, and role assignment**
+## **Add to your server** :package:
 
-[Click here](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot) to add the 22tango bot to your server.
+[Click here to add the 22tango bot to your server.](https://discord.com/api/oauth2/authorize?client_id=782730468156112957&permissions=8&scope=bot)
 
-## Functionality
+## **Functionality** :hammer:
 
 The bot can log meeting times, durations, and members (along with how much time each member spent in the meeting.)
 
@@ -17,14 +18,28 @@ The bot will generate personal voice channels when users join a generator channe
 
 To create a generator channel, create a voice channel called "mm-gen". It will be renamed by the bot to "Join to Create a Channel" if successful.
 
-Send `2!help` to see an informational panel.
-
-## Run
+Send 2!help to see an informational panel.
+## **Run** :runner:
 
 Set environment variable DISCORD_BOT_TOKEN to your bot token.
 
 Clone repo, then `go run`.
-
-## Docker
+## **Docker** :whale: 
 
 A Dockerfile is included in this repository which can be used for deployment.
+## **Demo** :information_source: 	
+### **Fact Check**
+![App Screenshot](./demo/factcheck.png)
+### **Meet Logs**
+![App Screenshot](./demo/meetlog.png)
+### **Meet Generator**
+![App Screenshot](./demo/join.gif)
+
+  
+## **Support** :bug:
+
+For support, please open an [issue.](https://github.com/ethanent/22tango/issues)
+
+## **Authors** :wave:
+
+- [@ethanent](https://github.com/ethanent)

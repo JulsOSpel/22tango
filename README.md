@@ -41,7 +41,3 @@ A Dockerfile is included in this repository which can be used for deployment.
 Documentation support will be [here.](https://github.com/ethanent/22tango/wiki)
 
 For bug support, please open an [issue.](https://github.com/ethanent/22tango/issues)
-
-## **Authors**
-
-- [@ethanent](https://github.com/ethanent)
